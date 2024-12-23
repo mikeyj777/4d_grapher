@@ -5,12 +5,35 @@
   width: 100%;
   height: 100vh;
   background-color: #f8f9fa;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
 }
 
 .visualization-panel {
   flex: 1;
   min-width: 0;
   padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.visualization-container {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.plot-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .controls-panel {

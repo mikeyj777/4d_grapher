@@ -21,15 +21,26 @@ const Plot4D = () => {
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
-        const width = containerRef.current.offsetWidth;
+        const rect = containerRef.current.getBoundingClientRect();
         setDimensions({
-          width: width,
-          height: Math.min(width * 0.67, 400)
+          width: rect.width,
+          height: rect.height
         });
       }
     };
 
     updateDimensions();
+    // Create a ResizeObserver to handle container size changes
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      if (containerRef.current) {
+        resizeObserver.unobserve(containerRef.current);
+      }
+    };
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
@@ -125,9 +136,9 @@ const Plot4D = () => {
   return (
     <div className="plot-container">
       <div className="visualization-panel">
-        <Card>
-          <CardContent>
-            <div ref={containerRef}>
+        <Card className="visualization-container">
+          <CardContent className="visualization-container">
+            <div ref={containerRef} className="visualization-container">
               <svg 
                 width={dimensions.width} 
                 height={dimensions.height} 
