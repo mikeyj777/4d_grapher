@@ -184,3 +184,28 @@
   font-size: 0.875rem;
   margin-top: 0.5rem;
 }
+
+.range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.range-input {
+  width: 80px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.range-input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.range-inputs span {
+  color: #4a5568;
+  font-size: 0.875rem;
+}
