@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import Plot from 'react-plotly.js';
 import { create, all } from 'mathjs';
+import { PlayStopButton }from './ui/ui';
 
 // Configure mathjs
 const math = create(all);
@@ -19,11 +20,15 @@ const Plot4D = () => {
   const [functionString, setFunctionString] = useState('sin(sqrt(x*x + y*y)) * 0.3 + sin(2*x + t) * 0.2');
   const [error, setError] = useState('');
   const [plotData, setPlotData] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   
   // Range states
   const [xRange, setXRange] = useState([-2, 2]);
   const [yRange, setYRange] = useState([-2, 2]);
   const [tRange, setTRange] = useState([0, 2 * Math.PI]);
+
+  // Animation reference
+  const animationRef = useRef(null);
 
   const evaluateFunction = useCallback((x, y, t, fn) => {
     try {
@@ -85,6 +90,49 @@ const Plot4D = () => {
       return null;
     }
   }, [evaluateFunction, xRange, yRange, tRange]);
+
+  // Animation functions
+  const animate = useCallback(() => {
+    if (!isPlaying) return;
+    
+    setTimeSlice(prev => {
+      if (prev >= 100) {
+        return 0;
+      }
+      return prev + 1;
+    });
+    
+    animationRef.current = requestAnimationFrame(animate);
+  }, [isPlaying]);
+
+  const handlePlay = useCallback(() => {
+    setIsPlaying(true);
+  }, []);
+
+  const handleStop = useCallback(() => {
+    setIsPlaying(false);
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+  }, []);
+
+  // Handle animation state changes and cleanup
+  React.useEffect(() => {
+    if (isPlaying) {
+      animationRef.current = requestAnimationFrame(animate);
+    } else if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+    };
+  }, [isPlaying, animate]);
 
   // Update plot data when function, time, or ranges change
   React.useEffect(() => {
@@ -233,17 +281,27 @@ const Plot4D = () => {
             </div>
 
             <div className="parameter-control">
-              <label className="label">Time Slice: {timeSlice}</label>
-              <div className="slider-container">
-                <div className="slider-track"></div>
-                <input
-                  type="range"
-                  className="slider"
-                  min={0}
-                  max={100}
-                  value={timeSlice}
-                  onChange={handleTimeSliceChange}
+              <div className="flex items-center gap-4">
+                <PlayStopButton
+                  onPlay={handlePlay}
+                  onStop={handleStop}
+                  isPlaying={isPlaying}
+                  size="medium"
                 />
+                <div className="flex-1">
+                  <label className="label">Time Slice: {timeSlice}</label>
+                  <div className="slider-container">
+                    <div className="slider-track"></div>
+                    <input
+                      type="range"
+                      className="slider"
+                      min={0}
+                      max={100}
+                      value={timeSlice}
+                      onChange={handleTimeSliceChange}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

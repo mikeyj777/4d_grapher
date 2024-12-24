@@ -48,3 +48,24 @@ export const Section = ({ title, children, className = '' }) => (
     </div>
   </div>
 );
+
+export const PlayStopButton = ({ onPlay, onStop, isPlaying = false, size = 'medium' }) => {
+  return (
+    <button 
+      onClick={isPlaying ? onStop : onPlay}
+      className={`play-stop-button ${size} ${isPlaying ? 'playing' : ''}`}
+      aria-label={isPlaying ? 'Stop' : 'Play'}
+    >
+      <div className="button-icon">
+        {isPlaying ? (
+          <div className="pause-icon">
+            <div className="pause-bar"></div>
+            <div className="pause-bar"></div>
+          </div>
+        ) : (
+          <div className="play-icon"></div>
+        )}
+      </div>
+    </button>
+  );
+};

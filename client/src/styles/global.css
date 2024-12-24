@@ -6,3 +6,4 @@ import and include all other component stylesheets for reference */
 @import './Home.css';
 @import './Plot4D.css';
 @import './Plotlyjs.css';
+@import './ui.css';
