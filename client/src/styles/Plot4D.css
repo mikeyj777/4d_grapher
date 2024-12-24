@@ -161,3 +161,26 @@
 .slider:focus::-moz-range-thumb {
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
 }
+
+.function-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.function-input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.error-message {
+  color: #e53e3e;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
