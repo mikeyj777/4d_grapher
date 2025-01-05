@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import Plot from 'react-plotly.js';
 import { create, all } from 'mathjs';
-import { PlayStopButton }from './ui/ui';
+import { PlayStopButton } from './ui/ui';
 
 // Configure mathjs
 const math = create(all);
@@ -31,15 +31,62 @@ const Plot4D = () => {
   const animationRef = useRef(null);
 
   const evaluateFunction = useCallback((x, y, t, fn) => {
+    if (!fn || fn.trim() === '') {
+      return 0;
+    }
     try {
       const scope = { x, y, t };
       return limitedEval(fn, scope);
     } catch (err) {
+      setError(err.message);
       return 0;
     }
   }, []);
 
   const generatePlotData = useCallback((fn, time) => {
+    if (!fn || fn.trim() === '') {
+      // Return a flat surface at z=0 if no function
+      const steps = 50;
+      const x = [];
+      const y = [];
+      const z = [];
+      
+      for (let i = 0; i <= steps; i++) {
+        const row_x = [];
+        const row_y = [];
+        const row_z = [];
+        
+        for (let j = 0; j <= steps; j++) {
+          const xVal = xRange[0] + (i / steps) * (xRange[1] - xRange[0]);
+          const yVal = yRange[0] + (j / steps) * (yRange[1] - yRange[0]);
+          
+          row_x.push(xVal);
+          row_y.push(yVal);
+          row_z.push(0);
+        }
+        
+        x.push(row_x);
+        y.push(row_y);
+        z.push(row_z);
+      }
+
+      return [{
+        type: 'surface',
+        x: x,
+        y: y,
+        z: z,
+        colorscale: 'Viridis',
+        contours: {
+          z: {
+            show: true,
+            usecolormap: true,
+            highlightcolor: "#42f462",
+            project: { z: true }
+          }
+        }
+      }];
+    }
+
     try {
       const steps = 50;
       const t = tRange[0] + (time / 100) * (tRange[1] - tRange[0]);
@@ -111,10 +158,6 @@ const Plot4D = () => {
 
   const handleStop = useCallback(() => {
     setIsPlaying(false);
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-      animationRef.current = null;
-    }
   }, []);
 
   // Handle animation state changes and cleanup
@@ -136,12 +179,26 @@ const Plot4D = () => {
 
   // Update plot data when function, time, or ranges change
   React.useEffect(() => {
-    const newData = generatePlotData(functionString, timeSlice);
-    if (newData) {
-      setPlotData(newData);
-      setError('');
+    // Stop any ongoing animation when function changes
+    if (isPlaying) {
+      handleStop();
     }
-  }, [functionString, timeSlice, generatePlotData]);
+
+    try {
+      const newData = generatePlotData(functionString, timeSlice);
+      if (newData && Array.isArray(newData) && newData.length > 0 && 
+          newData[0].x && newData[0].y && newData[0].z) {
+        setPlotData(newData);
+        setError('');
+      } else {
+        // If data is invalid, set to null to prevent render
+        setPlotData(null);
+      }
+    } catch (err) {
+      setPlotData(null);
+      setError(err.message);
+    }
+  }, [functionString, timeSlice, generatePlotData, handleStop, isPlaying]);
 
   const layout = {
     scene: {
@@ -170,7 +227,32 @@ const Plot4D = () => {
   };
 
   const handleFunctionChange = (e) => {
-    setFunctionString(e.target.value);
+    const newFunction = e.target.value;
+    
+    // Stop animation if it's running
+    if (isPlaying) {
+      handleStop();
+    }
+
+    // Clear everything if empty
+    if (!newFunction || newFunction.trim() === '') {
+      setError('');
+      setFunctionString('');
+      setPlotData(null);
+      return;
+    }
+    
+    // Test the function before setting it
+    try {
+      const testScope = { x: 0, y: 0, t: 0 };
+      limitedEval(newFunction, testScope);
+      setFunctionString(newFunction);
+      setError('');
+    } catch (err) {
+      setError(err.message);
+      setFunctionString(newFunction);  // Still update the string to show the error
+      setPlotData(null);  // Clear plot data on error
+    }
   };
 
   const handleTimeSliceChange = (e) => {
@@ -182,7 +264,7 @@ const Plot4D = () => {
       {/* Plot Panel */}
       <div className="visualization-panel">
         <div className="visualization-container">
-          {plotData && (
+          {plotData ? (
             <Plot
               data={plotData}
               layout={layout}
@@ -193,6 +275,10 @@ const Plot4D = () => {
                 scrollZoom: true
               }}
             />
+          ) : (
+            <div className="empty-plot-message">
+              {error ? 'Invalid function' : 'Enter a function to plot'}
+            </div>
           )}
         </div>
       </div>
